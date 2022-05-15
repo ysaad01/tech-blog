@@ -1,6 +1,8 @@
 const router = require("express").Router();
-
 const { User, Post, Comment } = require("../../models");
+const session = require("express-session");
+const SequelizeStore = require("connect-session-sequelize")(session.Store);
+const userAuth = require("../../utils/auth");
 
 // GET ALL users
 router.get("/", (req, res) => {
@@ -40,7 +42,7 @@ router.get("/:id", (req, res) => {
     .then((dbUserData) => {
       if (!dbUserData) {
         // error message if no user is found
-        res.status(404).json({ message: "No user found with this ID" });
+        res.status(404).json({ message: "No user found with that ID" });
         return;
       }
       res.json(dbUserData);
@@ -59,7 +61,13 @@ router.post("/", (req, res) => {
     password: req.body.password,
   })
     .then((dbUserData) => {
-      res.json(dbUserData);
+      req.session.save(() => {
+        req.session.user_id = dbUserData.id;
+        req.session.username = dbUserData.username;
+        req.session.loggedIn = true;
+
+        res.json(dbUserData);
+      });
     })
     .catch((err) => {
       console.log(err);
@@ -85,12 +93,19 @@ router.post("/login", (req, res) => {
       res.status(400).json({ message: "Invalid Password. Please try again!" });
       return;
     }
-    res.json({ user: dbUserData, message: "You are now logged in!" });
+    req.session.save(() => {
+      // declare session variables
+      req.session.user_id = dbUserData.id;
+      req.session.username = dbUserData.username;
+      req.session.loggedIn = true;
+
+      res.json({ user: dbUserData, message: "You are now logged in!" });
+    });
   });
 });
 
 // User logout route
-router.post("/logout", (req, res) => {
+router.post("/logout", userAuth, (req, res) => {
   if (req.session.loggedIn) {
     req.session.destroy(() => {
       res.status(204).end();
@@ -101,7 +116,7 @@ router.post("/logout", (req, res) => {
 });
 
 // UPDATE existing user
-router.put("/:id", (req, res) => {
+router.put("/:id", userAuth, (req, res) => {
   User.update(req.body, {
     individualHooks: true,
     where: {
@@ -110,7 +125,7 @@ router.put("/:id", (req, res) => {
   })
     .then((dbUserData) => {
       if (!dbUserData[0]) {
-        res.status(404).json({ message: "No user found with this ID" });
+        res.status(404).json({ message: "No user found with that ID" });
         return;
       }
       res.json(dbUserData);
@@ -130,7 +145,7 @@ router.delete("/:id", (req, res) => {
   })
     .then((dbUserData) => {
       if (!dbUserData) {
-        res.status(404).json({ message: "No user found with this ID" });
+        res.status(404).json({ message: "No user found with that ID" });
         return;
       }
       res.json(dbUserData);

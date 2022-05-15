@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const { User, Post, Comment } = require("../../models");
 const sequelize = require("../../config/connection");
+const userAuth = require("../../utils/auth");
 
 // GET ALL Posts
 router.get("/", (req, res) => {
@@ -54,7 +55,7 @@ router.get("/:id", (req, res) => {
   })
     .then((dbPostData) => {
       if (!dbPostData) {
-        res.status(404).json({ message: "No post found with this id" });
+        res.status(404).json({ message: "No post found with that ID" });
         return;
       }
       res.json(dbPostData);
@@ -66,11 +67,12 @@ router.get("/:id", (req, res) => {
 });
 
 // CREATE a New Post
-router.post("/", (req, res) => {
+router.post("/", userAuth, (req, res) => {
   Post.create({
     title: req.body.title,
     post_text: req.body.post_text,
-    user_id: req.user_id,
+    user_id: req.body.user_id,
+    user_id: req.session.user_id,
   })
     .then((dbPostData) => res.json(dbPostData))
     .catch((err) => {
@@ -80,7 +82,7 @@ router.post("/", (req, res) => {
 });
 
 // UPDATE Post's title/text
-router.put("/:id", (req, res) => {
+router.put("/:id", userAuth, (req, res) => {
   Post.update(req.body, {
     where: {
       id: req.params.id,
@@ -88,7 +90,7 @@ router.put("/:id", (req, res) => {
   })
     .then((dbPostData) => {
       if (!dbPostData) {
-        res.status(404).json({ message: "No post found with this id" });
+        res.status(404).json({ message: "No post found with that ID" });
         return;
       }
       res.json(dbPostData);
@@ -100,7 +102,7 @@ router.put("/:id", (req, res) => {
 });
 
 // DELETE Post by ID
-router.delete("/:id", (req, res) => {
+router.delete("/:id", userAuth, (req, res) => {
   Post.destroy({
     where: {
       id: req.params.id,
@@ -108,7 +110,7 @@ router.delete("/:id", (req, res) => {
   })
     .then((dbPostData) => {
       if (!dbPostData) {
-        res.status(404).json({ message: "No post found with this id" });
+        res.status(404).json({ message: "No post found with that ID" });
         return;
       }
       res.json(dbPostData);
