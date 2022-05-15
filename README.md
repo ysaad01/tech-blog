@@ -1,2 +1,3 @@
-# tech-blog
+# Tech Blog
+
 Module 14 Challenge
