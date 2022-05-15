@@ -11,16 +11,29 @@
     <div class="wrapper">
       <header>
         <h1>
-          <a href="/">Tech Blog</a>
+          <a href="/" id="title">Tech Blog</a>
         </h1>
+        <nav>
+          <span><a href="/">Home</a></span>
+          {{#if loggedIn}}
+            <a href="/dashboard">Dashboard</a>
+            <button id="logout" class="btn-no-style">Logout</button>
+          {{else}}
+            <a href="/login">Login</a>
+          {{/if}}
+        </nav>
       </header>
       <main>
         {{{body}}}
       </main>
       <footer>
-        Thanks for visiting!
+        &#10085 Developed with love by Yas.
       </footer>
     </div>
+
+    {{#if loggedIn}}
+      <script src="/javascript/logout.js"></script>
+    {{/if}}
 
   </body>
 
